@@ -1,11 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
   createUserRequest,
-  deactivateUserRequest,
+  deleteUserRequest,
   listUsersRequest,
   updateUserRequest,
 } from '../../services/users.service';
-import { getErrorMessage } from '../../utils/error';
+import { getErrorMessage, rejectMutationError } from '../../utils/error';
 
 export const fetchUsers = createAsyncThunk(
   'users/fetchUsers',
@@ -26,7 +26,7 @@ export const createUser = createAsyncThunk(
       const { data } = await createUserRequest(payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to create user'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to create user'));
     }
   }
 );
@@ -38,19 +38,19 @@ export const updateUser = createAsyncThunk(
       const { data } = await updateUserRequest(id, payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to update user'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to update user'));
     }
   }
 );
 
-export const deactivateUser = createAsyncThunk(
-  'users/deactivateUser',
+export const deleteUser = createAsyncThunk(
+  'users/deleteUser',
   async (id, { rejectWithValue }) => {
     try {
-      const { data } = await deactivateUserRequest(id);
-      return data.data || { id };
+      await deleteUserRequest(id);
+      return id;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to deactivate user'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to delete user'));
     }
   }
 );
@@ -106,14 +106,15 @@ const usersSlice = createSlice({
         state.mutationStatus = 'failed';
         state.mutationError = action.payload;
       })
-      .addCase(deactivateUser.pending, (state) => {
+      .addCase(deleteUser.pending, (state) => {
         state.mutationStatus = 'loading';
         state.mutationError = null;
       })
-      .addCase(deactivateUser.fulfilled, (state) => {
+      .addCase(deleteUser.fulfilled, (state, action) => {
         state.mutationStatus = 'succeeded';
+        state.items = state.items.filter((item) => item.id !== action.payload);
       })
-      .addCase(deactivateUser.rejected, (state, action) => {
+      .addCase(deleteUser.rejected, (state, action) => {
         state.mutationStatus = 'failed';
         state.mutationError = action.payload;
       });

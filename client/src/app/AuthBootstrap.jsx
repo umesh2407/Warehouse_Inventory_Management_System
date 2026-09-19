@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from '../modules/auth/authSlice';
-import { TOKEN_KEY } from '../utils/constants';
+import { getAuthToken } from '../utils/cookies';
 
 export const AuthBootstrap = ({ children }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token = getAuthToken();
     if (token) {
       dispatch(fetchCurrentUser());
     }

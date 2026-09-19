@@ -16,8 +16,8 @@ const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   adminName: process.env.ADMIN_NAME || 'System Admin',
-  adminEmail: process.env.ADMIN_EMAIL || 'admin@warehouse.local',
-  adminPassword: process.env.ADMIN_PASSWORD || 'Admin@12345',
+  adminEmail: process.env.ADMIN_EMAIL,
+  adminPassword: process.env.ADMIN_PASSWORD,
 };
 
 module.exports = env;

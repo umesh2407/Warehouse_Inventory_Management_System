@@ -6,6 +6,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node src/database/runSeed.js",
+    "migrate:users-soft-delete": "node migrations/001_add_user_isDeleted.js",
     "test": "jest --runInBand --forceExit"
   },
   "keywords": [],

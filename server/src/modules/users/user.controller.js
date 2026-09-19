@@ -18,13 +18,13 @@ const getUser = asyncHandler(async (req, res) => {
 });
 
 const updateUser = asyncHandler(async (req, res) => {
-  const user = await userService.updateUser(req.params.id, req.body);
+  const user = await userService.updateUser(req.params.id, req.body, req.user);
   return sendSuccess(res, 200, 'User updated successfully', user);
 });
 
 const deleteUser = asyncHandler(async (req, res) => {
-  const user = await userService.deactivateUser(req.params.id);
-  return sendSuccess(res, 200, 'User deactivated successfully', user);
+  const user = await userService.deleteUser(req.params.id, req.user);
+  return sendSuccess(res, 200, 'User deleted successfully', user);
 });
 
 module.exports = {

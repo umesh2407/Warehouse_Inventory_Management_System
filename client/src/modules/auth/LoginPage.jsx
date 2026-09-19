@@ -1,20 +1,19 @@
+import { Moon, Sun, Warehouse } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Alert } from '../../components/Feedback';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
 import { clearAuthError, login } from './authSlice';
-import { Moon, Sun, Warehouse } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, error } = useAuth();
+  const { status } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
@@ -90,8 +89,6 @@ export const LoginPage = () => {
             error={errors.password}
             onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
           />
-
-          {error ? <Alert tone="error">{error}</Alert> : null}
 
           <Button type="submit" className="w-full" disabled={status === 'loading'}>
             {status === 'loading' ? 'Signing in…' : 'Sign in'}

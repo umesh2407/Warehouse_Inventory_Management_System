@@ -10,7 +10,11 @@ npm install
 cp .env.example .env
 ```
 
-Update `.env` with your MongoDB URI and JWT secret.
+Fill in `.env` with your own values (never commit `.env`):
+
+- `MONGO_URI`
+- `JWT_SECRET`
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` (used only by `npm run seed`)
 
 ## Run
 
@@ -21,17 +25,15 @@ npm run dev
 # production
 npm start
 
-# seed initial admin user
+# seed initial admin user (requires ADMIN_EMAIL and ADMIN_PASSWORD)
 npm run seed
+
+# backfill isDeleted/deletedAt on existing users
+npm run migrate:users-soft-delete
 
 # tests (uses MONGO_URI with a separate warehouse_inventory_test_<pid> database)
 npm test
 ```
-
-Default seeded admin (from `.env`):
-
-- Email: `admin@warehouse.local`
-- Password: `Admin@12345`
 
 ## API prefix
 
@@ -64,6 +66,7 @@ Authorization: Bearer <token>
 
 Import [`postman/Warehouse_Inventory_API.postman_collection.json`](postman/Warehouse_Inventory_API.postman_collection.json) into Postman.
 
-1. Confirm `baseUrl` is `http://localhost:5000/api/v1`
-2. Run **Auth → Login** (saves JWT to `token` automatically)
-3. Use the remaining folders for frontend integration testing
+1. Set `baseUrl` to `http://localhost:5000/api/v1`
+2. Set `adminEmail` / `adminPassword` collection variables from your `.env`
+3. Run **Auth → Login** (saves JWT to `token` automatically)
+4. Use the remaining folders for frontend integration testing

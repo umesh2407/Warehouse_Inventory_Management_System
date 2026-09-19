@@ -1,10 +1,10 @@
 process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = 'test-jwt-secret-key';
+process.env.JWT_SECRET = 'test-only-jwt-secret';
 process.env.JWT_EXPIRES_IN = '1h';
 process.env.CLIENT_ORIGIN = 'http://localhost:5173';
-process.env.ADMIN_EMAIL = 'admin@warehouse.local';
-process.env.ADMIN_PASSWORD = 'Admin@12345';
-process.env.ADMIN_NAME = 'System Admin';
+process.env.ADMIN_EMAIL = 'test-admin@example.com';
+process.env.ADMIN_PASSWORD = 'test-only-password';
+process.env.ADMIN_NAME = 'Test Admin';
 
 require('dotenv').config({ quiet: true, override: false });
 

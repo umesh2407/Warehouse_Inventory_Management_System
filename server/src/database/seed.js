@@ -3,11 +3,17 @@ const env = require('../config/env');
 const { ROLES } = require('../common/constants');
 
 const seedAdmin = async () => {
-  const email = env.adminEmail.toLowerCase();
-  const existing = await User.findOne({ email });
+  if (!env.adminEmail || !env.adminPassword) {
+    throw new Error(
+      'ADMIN_EMAIL and ADMIN_PASSWORD must be set in the environment before seeding'
+    );
+  }
+
+  const email = env.adminEmail.toLowerCase().trim();
+  const existing = await User.findOne({ email, isDeleted: false });
 
   if (existing) {
-    console.log(`Admin already exists: ${email}`);
+    console.log('Admin already exists');
     return existing;
   }
 
@@ -19,7 +25,7 @@ const seedAdmin = async () => {
     role: ROLES.ADMIN,
   });
 
-  console.log(`Admin seeded: ${email}`);
+  console.log('Admin seeded successfully');
   return admin;
 };
 

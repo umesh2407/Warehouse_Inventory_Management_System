@@ -6,17 +6,19 @@ import {
   updateProductRequest,
 } from '../../services/products.service';
 import { DEFAULT_LIMIT, DEFAULT_PAGE } from '../../utils/constants';
-import { getErrorMessage } from '../../utils/error';
+import { getErrorMessage, rejectMutationError } from '../../utils/error';
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const { data } = await listProductsRequest({
-        search: params.search || '',
+      const query = {
         page: params.page || DEFAULT_PAGE,
         limit: params.limit || DEFAULT_LIMIT,
-      });
+      };
+      if (params.search) query.search = params.search;
+
+      const { data } = await listProductsRequest(query);
       return data.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to load products'));
@@ -31,7 +33,7 @@ export const createProduct = createAsyncThunk(
       const { data } = await createProductRequest(payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to create product'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to create product'));
     }
   }
 );
@@ -43,7 +45,7 @@ export const updateProduct = createAsyncThunk(
       const { data } = await updateProductRequest(id, payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to update product'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to update product'));
     }
   }
 );
@@ -55,7 +57,7 @@ export const deleteProduct = createAsyncThunk(
       await deleteProductRequest(id);
       return id;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to delete product'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to delete product'));
     }
   }
 );

@@ -7,7 +7,7 @@ const env = require('../../config/env');
 const login = async ({ email, password }) => {
   const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
 
-  if (!user || !user.isActive) {
+  if (!user || !user.isActive || user.isDeleted) {
     throw new ApiError(401, 'Invalid email or password');
   }
 
@@ -30,7 +30,7 @@ const login = async ({ email, password }) => {
 
 const getCurrentUser = async (userId) => {
   const user = await User.findById(userId);
-  if (!user || !user.isActive) {
+  if (!user || !user.isActive || user.isDeleted) {
     throw new ApiError(401, 'Invalid or expired token');
   }
   return toSafeUser(user);

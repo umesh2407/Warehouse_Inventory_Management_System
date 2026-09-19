@@ -6,7 +6,7 @@ import {
   updateWarehouseRequest,
 } from '../../services/warehouses.service';
 import { DEFAULT_LIMIT, DEFAULT_PAGE } from '../../utils/constants';
-import { getErrorMessage } from '../../utils/error';
+import { getErrorMessage, rejectMutationError } from '../../utils/error';
 
 export const fetchWarehouses = createAsyncThunk(
   'warehouses/fetchWarehouses',
@@ -30,7 +30,7 @@ export const createWarehouse = createAsyncThunk(
       const { data } = await createWarehouseRequest(payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to create warehouse'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to create warehouse'));
     }
   }
 );
@@ -42,7 +42,7 @@ export const updateWarehouse = createAsyncThunk(
       const { data } = await updateWarehouseRequest(id, payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to update warehouse'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to update warehouse'));
     }
   }
 );
@@ -54,7 +54,7 @@ export const deleteWarehouse = createAsyncThunk(
       await deleteWarehouseRequest(id);
       return id;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to delete warehouse'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to delete warehouse'));
     }
   }
 );

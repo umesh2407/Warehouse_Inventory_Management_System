@@ -8,4 +8,4 @@ export const getUserByIdRequest = (id) => api.get(`/users/${id}`);
 
 export const updateUserRequest = (id, payload) => api.patch(`/users/${id}`, payload);
 
-export const deactivateUserRequest = (id) => api.delete(`/users/${id}`);
+export const deleteUserRequest = (id) => api.delete(`/users/${id}`);

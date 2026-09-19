@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const env = require('./config/env');
 const errorHandler = require('./middlewares/errorHandler');
 const { sendSuccess } = require('./common/response');
@@ -20,6 +21,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/api/v1/health', (req, res) => {
   return sendSuccess(res, 200, 'OK', { status: 'ok' });

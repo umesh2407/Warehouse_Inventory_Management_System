@@ -2,14 +2,32 @@ import { AlertTriangle, Boxes, Package, Warehouse } from 'lucide-react';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Badge } from '../../components/Badge';
 import { ErrorState } from '../../components/Feedback';
+import { LowStockAnalysis } from '../../components/LowStockAnalysis';
 import { PageHeader } from '../../components/PageHeader';
-import { CardSkeleton, TableSkeleton } from '../../components/Skeleton';
+import { CardSkeleton, Skeleton } from '../../components/Skeleton';
 import { useAuth } from '../../hooks/useAuth';
 import { formatNumber } from '../../utils/format';
-import { fetchDashboardSummary } from './dashboardSlice';
 import { fetchLowStock } from '../inventory/inventorySlice';
+import { fetchDashboardSummary } from './dashboardSlice';
+
+const LowStockSkeleton = () => (
+  <div className="space-y-8 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+    {[1, 2].map((key) => (
+      <div key={key} className="space-y-3">
+        <div className="flex justify-between gap-4">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-5 w-28" />
+        </div>
+        <Skeleton className="mt-4 h-9 w-full" />
+        <div className="flex justify-between">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 export const DashboardPage = () => {
   const dispatch = useDispatch();
@@ -51,7 +69,7 @@ export const DashboardPage = () => {
   ];
 
   return (
-    <div>
+    <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Dashboard"
         description="Overview of inventory health across warehouses"
@@ -62,81 +80,80 @@ export const DashboardPage = () => {
       ) : status === 'loading' || status === 'idle' ? (
         <CardSkeleton />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {cards.map(({ label, value, icon: Icon, to, tone }) => (
-            <Link
-              key={label}
-              to={to}
-              className="rounded-xl border border-slate-200 bg-white p-5 transition hover:border-teal-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-700"
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-                <Icon
-                  className={`h-5 w-5 ${
-                    tone === 'warning' ? 'text-amber-500' : 'text-teal-600 dark:text-teal-400'
+        <div className="mb-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {cards.map(({ label, value, icon: Icon, to, tone }) => {
+            const isWarning = tone === 'warning';
+            return (
+              <Link
+                key={label}
+                to={to}
+                className={`flex items-start justify-between rounded-xl border p-6 shadow-sm transition hover:shadow-md ${
+                  isWarning
+                    ? 'border-amber-400 bg-amber-50 hover:border-amber-500 dark:border-amber-600 dark:bg-amber-950/40 dark:hover:border-amber-500'
+                    : 'border-slate-200 bg-white hover:border-teal-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-700'
+                }`}
+              >
+                <div>
+                  <h3 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                    {label}
+                  </h3>
+                  <p
+                    className={`text-3xl font-bold tracking-tight ${
+                      isWarning
+                        ? 'text-amber-700 dark:text-amber-300'
+                        : 'text-slate-900 dark:text-slate-50'
+                    }`}
+                  >
+                    {formatNumber(value)}
+                  </p>
+                </div>
+                <div
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] ${
+                    isWarning
+                      ? 'bg-amber-100 text-amber-500 dark:bg-amber-900/60 dark:text-amber-400'
+                      : 'bg-teal-50 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400'
                   }`}
-                />
-              </div>
-              <p className="text-3xl font-semibold text-slate-900 dark:text-slate-50">
-                {formatNumber(value)}
-              </p>
-            </Link>
-          ))}
+                >
+                  <Icon className="h-6 w-6" />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
 
-      <div className="mt-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-            Low stock products
+      <div>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+            Low Stock Analysis
           </h2>
           {isAdmin ? (
-            <Link to="/products" className="text-sm font-medium text-teal-600 hover:underline">
+            <Link
+              to="/products"
+              className="text-sm font-medium text-teal-600 hover:underline dark:text-teal-400"
+            >
               Manage products
             </Link>
-          ) : null}
+          ) : (
+            <Link
+              to="/inventory"
+              className="text-sm font-medium text-teal-600 hover:underline dark:text-teal-400"
+            >
+              View inventory
+            </Link>
+          )}
         </div>
 
         {lowStockStatus === 'failed' ? (
           <ErrorState message={lowStockError} onRetry={() => dispatch(fetchLowStock())} />
         ) : lowStockStatus === 'loading' || lowStockStatus === 'idle' ? (
-          <TableSkeleton rows={4} cols={4} />
+          <LowStockSkeleton />
         ) : lowStock.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-white px-5 py-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+          <div className="rounded-xl border border-slate-200 bg-white px-5 py-10 text-center text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
             All products are above their minimum stock levels.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Product</th>
-                  <th className="px-4 py-3 font-medium">SKU</th>
-                  <th className="px-4 py-3 font-medium">Total stock</th>
-                  <th className="px-4 py-3 font-medium">Minimum</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {lowStock.map((item) => (
-                  <tr key={item.id} className="bg-amber-50/40 dark:bg-amber-950/10">
-                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">
-                      <div className="flex items-center gap-2">
-                        {item.name}
-                        <Badge tone="warning">Low</Badge>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{item.sku}</td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
-                      {formatNumber(item.totalStock)}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
-                      {formatNumber(item.minimumStockLevel)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <LowStockAnalysis items={lowStock} />
         )}
       </div>
     </div>

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-warehouse001",
     "name": "Warehouse Inventory API",
-    "description": "REST API collection for the Warehouse Inventory Management System.\n\n## Quick start\n1. Set `baseUrl` (default `http://localhost:5000/api/v1`).\n2. Run **Auth → Login** (admin credentials are prefilled from seed).\n3. Token is saved automatically to `token`.\n4. Other requests use `Authorization: Bearer {{token}}`.\n\n## Roles\n- `ADMIN` — products, warehouses, users, inventory, dashboard\n- `WAREHOUSE_STAFF` — view catalog + inventory operations + dashboard\n\n## Response shape\n```json\n{ \"success\": true, \"message\": \"...\", \"data\": {} }\n{ \"success\": false, \"message\": \"...\", \"errors\": [] }\n```",
+    "description": "REST API collection for the Warehouse Inventory Management System.\n\n## Quick start\n1. Set `baseUrl` (default `http://localhost:5000/api/v1`).\n2. Set `adminEmail` and `adminPassword` from your local `.env` (do not commit real credentials).\n3. Run **Auth → Login**. Token is saved automatically to `token`.\n4. Other requests use `Authorization: Bearer {{token}}`.\n\n## Roles\n- `ADMIN` — products, warehouses, users, inventory, dashboard\n- `WAREHOUSE_STAFF` — view catalog + inventory operations + dashboard\n\n## Response shape\n```json\n{ \"success\": true, \"message\": \"...\", \"data\": {} }\n{ \"success\": false, \"message\": \"...\", \"errors\": [] }\n```",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -16,19 +16,19 @@
     },
     {
       "key": "adminEmail",
-      "value": "admin@warehouse.local"
+      "value": ""
     },
     {
       "key": "adminPassword",
-      "value": "Admin@12345"
+      "value": ""
     },
     {
       "key": "staffEmail",
-      "value": "staff@warehouse.local"
+      "value": ""
     },
     {
       "key": "staffPassword",
-      "value": "Staff@12345"
+      "value": ""
     },
     {
       "key": "userId",
@@ -137,7 +137,7 @@
             "method": "POST",
             "header": [],
             "url": "{{baseUrl}}/auth/logout",
-            "description": "Stateless logout. Client should discard the token after success."
+            "description": "Clears the `warehouse_token` cookie and ends the session. Auth header is optional."
           },
           "response": []
         }
@@ -213,7 +213,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Staff Name\",\n  \"email\": \"updated.staff@warehouse.local\",\n  \"isActive\": true\n}"
+              "raw": "{\n  \"name\": \"Updated Staff Name\",\n  \"email\": \"updated.staff@example.com\",\n  \"isActive\": true\n}"
             },
             "url": "{{baseUrl}}/users/{{userId}}",
             "description": "Admin only. Update name, email, and/or isActive.\n\nCannot change own role/status. Cannot change admin role/status. Cannot assign ADMIN role."

@@ -7,19 +7,22 @@ import {
   transferStockRequest,
 } from '../../services/inventory.service';
 import { DEFAULT_LIMIT, DEFAULT_PAGE } from '../../utils/constants';
-import { getErrorMessage } from '../../utils/error';
+import { getErrorMessage, rejectMutationError } from '../../utils/error';
 
 export const fetchInventory = createAsyncThunk(
   'inventory/fetchInventory',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const { data } = await listInventoryRequest({
-        productId: params.productId || '',
-        warehouseId: params.warehouseId || '',
-        search: params.search || '',
+      const query = {
         page: params.page || DEFAULT_PAGE,
         limit: params.limit || DEFAULT_LIMIT,
-      });
+      };
+
+      if (params.productId) query.productId = params.productId;
+      if (params.warehouseId) query.warehouseId = params.warehouseId;
+      if (params.search) query.search = params.search;
+
+      const { data } = await listInventoryRequest(query);
       return data.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to load inventory'));
@@ -46,7 +49,7 @@ export const addStock = createAsyncThunk(
       const { data } = await addStockRequest(payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to add stock'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to add stock'));
     }
   }
 );
@@ -58,7 +61,7 @@ export const removeStock = createAsyncThunk(
       const { data } = await removeStockRequest(payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to remove stock'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to remove stock'));
     }
   }
 );
@@ -70,7 +73,7 @@ export const transferStock = createAsyncThunk(
       const { data } = await transferStockRequest(payload);
       return data.data;
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to transfer stock'));
+      return rejectWithValue(rejectMutationError(error, 'Failed to transfer stock'));
     }
   }
 );

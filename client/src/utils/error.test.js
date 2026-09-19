@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getErrorMessage, getFieldErrors } from '../utils/error';
-import { formatRole } from '../utils/format';
-import { ROLES } from '../utils/constants';
+import { ROLES } from './constants';
+import {
+  getErrorMessage,
+  getFieldErrors,
+  isValidationError,
+  rejectMutationError,
+} from './error';
+import { formatRole } from './format';
 
 describe('getErrorMessage', () => {
   it('returns API message when present', () => {
@@ -15,6 +20,23 @@ describe('getErrorMessage', () => {
 
   it('returns empty field errors safely', () => {
     expect(getFieldErrors(null)).toEqual([]);
+  });
+});
+
+describe('rejectMutationError', () => {
+  it('returns message only for 422 validation errors', () => {
+    const error = {
+      response: { status: 422, data: { message: 'Warehouse capacity exceeded' } },
+    };
+    expect(isValidationError(error)).toBe(true);
+    expect(rejectMutationError(error, 'Failed')).toBe('Warehouse capacity exceeded');
+  });
+
+  it('returns null for non-422 errors (toast handles them)', () => {
+    const error = {
+      response: { status: 409, data: { message: 'SKU already exists' } },
+    };
+    expect(rejectMutationError(error, 'Failed')).toBeNull();
   });
 });
 

@@ -1,4 +1,4 @@
-import { Pencil, Plus, UserX } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Alert, EmptyState, ErrorState } from '../../components/Feedback';
@@ -8,12 +8,13 @@ import { Input, Select } from '../../components/Input';
 import { Modal } from '../../components/Modal';
 import { PageHeader } from '../../components/PageHeader';
 import { TableSkeleton } from '../../components/Skeleton';
+import { useAuth } from '../../hooks/useAuth';
 import { ROLES } from '../../utils/constants';
 import { formatRole } from '../../utils/format';
 import {
   clearUsersError,
   createUser,
-  deactivateUser,
+  deleteUser,
   fetchUsers,
   updateUser,
 } from './usersSlice';
@@ -22,21 +23,25 @@ const emptyCreateForm = {
   name: '',
   email: '',
   password: '',
-  role: ROLES.WAREHOUSE_STAFF,
 };
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const UsersPage = () => {
   const dispatch = useDispatch();
+  const { user: currentUser } = useAuth();
   const { items, status, error, mutationStatus, mutationError } = useSelector(
     (state) => state.users
   );
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [deactivateTarget, setDeactivateTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [createForm, setCreateForm] = useState(emptyCreateForm);
-  const [editForm, setEditForm] = useState({ name: '', role: '', isActive: true });
+  const [editForm, setEditForm] = useState({ name: '', email: '', isActive: true });
   const [formErrors, setFormErrors] = useState({});
+
+  const editingAdmin = editTarget?.role === ROLES.ADMIN;
 
   useEffect(() => {
     dispatch(fetchUsers());
@@ -53,7 +58,7 @@ export const UsersPage = () => {
     setEditTarget(user);
     setEditForm({
       name: user.name,
-      role: user.role,
+      email: user.email,
       isActive: user.isActive,
     });
     setFormErrors({});
@@ -64,11 +69,9 @@ export const UsersPage = () => {
     const next = {};
     if (!createForm.name.trim()) next.name = 'Name is required';
     if (!createForm.email.trim()) next.email = 'Email is required';
+    else if (!emailPattern.test(createForm.email.trim())) next.email = 'Enter a valid email';
     if (!createForm.password || createForm.password.length < 8) {
       next.password = 'Password must be at least 8 characters';
-    }
-    if (![ROLES.ADMIN, ROLES.WAREHOUSE_STAFF].includes(createForm.role)) {
-      next.role = 'Role is required';
     }
     setFormErrors(next);
     return Object.keys(next).length === 0;
@@ -77,9 +80,8 @@ export const UsersPage = () => {
   const validateEdit = () => {
     const next = {};
     if (!editForm.name.trim()) next.name = 'Name is required';
-    if (![ROLES.ADMIN, ROLES.WAREHOUSE_STAFF].includes(editForm.role)) {
-      next.role = 'Role is required';
-    }
+    if (!editForm.email.trim()) next.email = 'Email is required';
+    else if (!emailPattern.test(editForm.email.trim())) next.email = 'Enter a valid email';
     setFormErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -92,7 +94,6 @@ export const UsersPage = () => {
         name: createForm.name.trim(),
         email: createForm.email.trim(),
         password: createForm.password,
-        role: createForm.role,
       })
     );
     if (createUser.fulfilled.match(result)) {
@@ -104,14 +105,21 @@ export const UsersPage = () => {
   const handleUpdate = async (event) => {
     event.preventDefault();
     if (!validateEdit() || !editTarget) return;
+
+    const payload = {
+      name: editForm.name.trim(),
+      email: editForm.email.trim(),
+    };
+
+    // Admin role/status cannot be changed by the API.
+    if (!editingAdmin) {
+      payload.isActive = editForm.isActive;
+    }
+
     const result = await dispatch(
       updateUser({
         id: editTarget.id,
-        payload: {
-          name: editForm.name.trim(),
-          role: editForm.role,
-          isActive: editForm.isActive,
-        },
+        payload,
       })
     );
     if (updateUser.fulfilled.match(result)) {
@@ -120,24 +128,26 @@ export const UsersPage = () => {
     }
   };
 
-  const handleDeactivate = async () => {
-    if (!deactivateTarget) return;
-    const result = await dispatch(deactivateUser(deactivateTarget.id));
-    if (deactivateUser.fulfilled.match(result)) {
-      setDeactivateTarget(null);
-      dispatch(fetchUsers());
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const result = await dispatch(deleteUser(deleteTarget.id));
+    if (deleteUser.fulfilled.match(result)) {
+      setDeleteTarget(null);
     }
   };
+
+  const canDelete = (user) =>
+    user.role !== ROLES.ADMIN && user.id !== currentUser?.id;
 
   return (
     <div>
       <PageHeader
         title="Users"
-        description="Create and manage admin and warehouse staff accounts"
+        description="Create warehouse staff accounts and manage user details"
         actions={
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            Add user
+            Add warehouse staff
           </Button>
         }
       />
@@ -153,7 +163,7 @@ export const UsersPage = () => {
           action={
             <Button onClick={openCreate}>
               <Plus className="h-4 w-4" />
-              Add user
+              Add warehouse staff
             </Button>
           }
         />
@@ -191,16 +201,17 @@ export const UsersPage = () => {
                       <Button variant="ghost" size="sm" onClick={() => openEdit(user)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      {user.isActive ? (
+                      {canDelete(user) ? (
                         <Button
                           variant="ghost"
                           size="sm"
+                          aria-label={`Delete ${user.name}`}
                           onClick={() => {
                             dispatch(clearUsersError());
-                            setDeactivateTarget(user);
+                            setDeleteTarget(user);
                           }}
                         >
-                          <UserX className="h-4 w-4 text-rose-500" />
+                          <Trash2 className="h-4 w-4 text-rose-500" />
                         </Button>
                       ) : null}
                     </div>
@@ -214,7 +225,7 @@ export const UsersPage = () => {
 
       <Modal
         open={createOpen}
-        title="Add user"
+        title="Add warehouse staff"
         onClose={() => setCreateOpen(false)}
         footer={
           <>
@@ -228,6 +239,9 @@ export const UsersPage = () => {
         }
       >
         <form id="create-user-form" className="space-y-4" onSubmit={handleCreate}>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            New accounts are created as Warehouse Staff.
+          </p>
           <Input
             label="Name"
             name="name"
@@ -251,16 +265,6 @@ export const UsersPage = () => {
             error={formErrors.password}
             onChange={(e) => setCreateForm((prev) => ({ ...prev, password: e.target.value }))}
           />
-          <Select
-            label="Role"
-            name="role"
-            value={createForm.role}
-            error={formErrors.role}
-            onChange={(e) => setCreateForm((prev) => ({ ...prev, role: e.target.value }))}
-          >
-            <option value={ROLES.WAREHOUSE_STAFF}>Warehouse Staff</option>
-            <option value={ROLES.ADMIN}>Admin</option>
-          </Select>
           {mutationError ? <Alert tone="error">{mutationError}</Alert> : null}
         </form>
       </Modal>
@@ -288,53 +292,57 @@ export const UsersPage = () => {
             error={formErrors.name}
             onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
           />
-          <Select
-            label="Role"
-            name="editRole"
-            value={editForm.role}
-            error={formErrors.role}
-            onChange={(e) => setEditForm((prev) => ({ ...prev, role: e.target.value }))}
-          >
-            <option value={ROLES.WAREHOUSE_STAFF}>Warehouse Staff</option>
-            <option value={ROLES.ADMIN}>Admin</option>
-          </Select>
-          <Select
-            label="Status"
-            name="editStatus"
-            value={editForm.isActive ? 'true' : 'false'}
-            onChange={(e) =>
-              setEditForm((prev) => ({ ...prev, isActive: e.target.value === 'true' }))
-            }
-          >
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </Select>
+          <Input
+            label="Email"
+            name="editEmail"
+            type="email"
+            value={editForm.email}
+            error={formErrors.email}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+          />
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Role: <span className="font-medium text-slate-700 dark:text-slate-200">{formatRole(editTarget?.role)}</span>
+          </p>
+          {!editingAdmin ? (
+            <Select
+              label="Status"
+              name="editStatus"
+              value={editForm.isActive ? 'true' : 'false'}
+              onChange={(e) =>
+                setEditForm((prev) => ({ ...prev, isActive: e.target.value === 'true' }))
+              }
+            >
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </Select>
+          ) : null}
           {mutationError ? <Alert tone="error">{mutationError}</Alert> : null}
         </form>
       </Modal>
 
       <Modal
-        open={Boolean(deactivateTarget)}
-        title="Deactivate user"
-        onClose={() => setDeactivateTarget(null)}
+        open={Boolean(deleteTarget)}
+        title="Delete user"
+        onClose={() => setDeleteTarget(null)}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setDeactivateTarget(null)}>
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
               Cancel
             </Button>
             <Button
               variant="danger"
-              onClick={handleDeactivate}
+              onClick={handleDelete}
               disabled={mutationStatus === 'loading'}
             >
-              {mutationStatus === 'loading' ? 'Deactivating…' : 'Deactivate'}
+              {mutationStatus === 'loading' ? 'Deleting…' : 'Delete'}
             </Button>
           </>
         }
       >
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Deactivate <strong>{deactivateTarget?.name}</strong>? They will no longer be able to sign
-          in.
+          Are you sure you want to delete <strong>{deleteTarget?.name}</strong> (
+          {deleteTarget?.email})? They will be removed from the list and will no longer be able to
+          sign in.
         </p>
         {mutationError ? <Alert tone="error">{mutationError}</Alert> : null}
       </Modal>

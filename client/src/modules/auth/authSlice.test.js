@@ -1,17 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../../utils/cookies', () => ({
+  getAuthToken: vi.fn(() => null),
+  setAuthToken: vi.fn(),
+  clearAuthToken: vi.fn(),
+}));
+
+import { setAuthToken } from '../../utils/cookies';
 import authReducer, { clearAuthError, login } from './authSlice';
 
 describe('authSlice', () => {
   beforeEach(() => {
-    vi.stubGlobal('localStorage', {
-      getItem: vi.fn(() => null),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-    });
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   it('clears auth error', () => {
@@ -34,5 +38,6 @@ describe('authSlice', () => {
     expect(state.user).toEqual(payload.user);
     expect(state.token).toBe('jwt-token');
     expect(state.status).toBe('succeeded');
+    expect(setAuthToken).toHaveBeenCalledWith('jwt-token');
   });
 });

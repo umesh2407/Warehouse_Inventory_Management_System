@@ -26,7 +26,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
 
   const user = await User.findById(payload.sub).select('-passwordHash');
 
-  if (!user || !user.isActive) {
+  if (!user || !user.isActive || user.isDeleted) {
     throw new ApiError(401, 'Invalid or expired token');
   }
 

@@ -8,7 +8,6 @@ const createUserSchema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
     email: z.string().trim().email('Valid email is required'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    role: z.enum([ROLES.ADMIN, ROLES.WAREHOUSE_STAFF]).default(ROLES.WAREHOUSE_STAFF),
   }),
 });
 
@@ -19,7 +18,8 @@ const updateUserSchema = z.object({
   body: z
     .object({
       name: z.string().trim().min(1).optional(),
-      role: z.enum([ROLES.ADMIN, ROLES.WAREHOUSE_STAFF]).optional(),
+      email: z.string().trim().email('Valid email is required').optional(),
+      role: z.enum([ROLES.WAREHOUSE_STAFF]).optional(),
       isActive: z.boolean().optional(),
     })
     .refine((data) => Object.keys(data).length > 0, {

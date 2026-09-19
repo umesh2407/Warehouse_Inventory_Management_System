@@ -1,16 +1,16 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { getMeRequest, loginRequest, logoutRequest } from '../../services/auth.service';
-import { TOKEN_KEY } from '../../utils/constants';
-import { getErrorMessage } from '../../utils/error';
+import { getErrorMessage, rejectMutationError } from '../../utils/error';
+import { clearAuthToken, getAuthToken, setAuthToken } from '../../utils/cookies';
 
-const storedToken = localStorage.getItem(TOKEN_KEY);
+const storedToken = getAuthToken();
 
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
   try {
     const { data } = await loginRequest(credentials);
     return data.data;
   } catch (error) {
-    return rejectWithValue(getErrorMessage(error, 'Invalid email or password'));
+    return rejectWithValue(rejectMutationError(error, 'Invalid email or password'));
   }
 });
 
@@ -59,7 +59,7 @@ const authSlice = createSlice({
         state.bootstrapStatus = 'succeeded';
         state.user = action.payload.user;
         state.token = action.payload.token;
-        localStorage.setItem(TOKEN_KEY, action.payload.token);
+        setAuthToken(action.payload.token);
       })
       .addCase(login.rejected, (state, action) => {
         state.status = 'failed';
@@ -76,7 +76,7 @@ const authSlice = createSlice({
         state.bootstrapStatus = 'failed';
         state.user = null;
         state.token = null;
-        localStorage.removeItem(TOKEN_KEY);
+        clearAuthToken();
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
@@ -84,7 +84,7 @@ const authSlice = createSlice({
         state.status = 'idle';
         state.bootstrapStatus = 'idle';
         state.error = null;
-        localStorage.removeItem(TOKEN_KEY);
+        clearAuthToken();
       });
   },
 });
