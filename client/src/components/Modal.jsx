@@ -1,0 +1,45 @@
+import { X } from 'lucide-react';
+import { useEffect } from 'react';
+import { Button } from './Button';
+
+export const Modal = ({ open, title, onClose, children, footer }) => {
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Close modal backdrop"
+        className="absolute inset-0 bg-slate-900/50"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
+      >
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>
+        {footer ? (
+          <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4 dark:border-slate-800">
+            {footer}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+cd "$(dirname -- "$0")/.." || exit 1
+
+npx lint-staged
+npm run test:run
+npm run build
